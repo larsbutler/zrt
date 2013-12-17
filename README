@@ -1,5 +1,5 @@
 ABOUT:
-ZRT - ZeroVM Run-Time environment for user executables running on virtual hardware 
+ZRT - ZeroVM Run-Time environment for user executables running on virtual hardware
 represented by ZeroVM. ZRT act as part of glibc library and implements zerovm platform
 dependent functions. ZVM toolchain must be used in order to create user applications;
 
@@ -14,7 +14,7 @@ Here must be section with step-by-step instruction on how to install zvm toolcha
 
 git clone https://github.com/zerovm/zrt.git
 
-4.Set environmant variables on ~/.bashrc
+4.Set environment variables on ~/.bashrc
 
 ZVM_PREFIX    -path to zvm toolchain
 ZEROVM_ROOT   -path to ZEROVM folder, used for debugging with gdb
