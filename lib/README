@@ -3,24 +3,25 @@ ZRT - ZeroVM runtime library
 ---------------------------------------------------------------
 {DOCPATH}
 
-1. ZRT it is an environment for user application, simple POSIX
-Operating System that itself implements system calls handlers. ZRT is a
-part of GNU libc that using plaggable interface to access syscall
-handlers implemented on side of ZRT environment. Direct syscalls from
-user code to host system are not allowed, untrusted code at all should
-be prevalidated by ZeroVM before execution, see ZeroVM docs.
-Untrusted code - it's an any code running under ZeroVM. Both zerovm
-environment and user code running in the same address space.
-2. Implemented 2 own filesystems that also accessible via plaggable
-interface: RW FS hosted in memory and FS with an unmutable structure
-on top of channels; All FSs accessible via single object - main
-filesystem that combines implemented FSs and translates requests to
+1. ZRT is an environment for user applications, a simple POSIX operating system
+that implements system call handlers. ZRT is a part of GNU libc that uses a
+pluggable interface to access syscall handlers implemented on side of the ZRT
+environment. Direct syscalls from user code to the host system are not allowed,
+and all untrusted code should be prevalidated by ZeroVM before execution (see
+ZeroVM docs). The term "untrusted code" is any code running under ZeroVM. Both
+the ZeroVM environment and user code run in the same address space.
+
+2. ZRT implements two of its own filesystems that are also accessible via a
+pluggable interface: A read/write filesystem hosted in memory and an immutable
+filesystem on top of channels. All filesystems are accessible via a single
+object. The main filesystem combines implemented FSs and translates requests to
 real FS implementations depending on file path.
+
 2.1 Rewritable filesystem, available in user space as mounted on "/"
 root. ZRT creates it at runtime in memory, and injects it by real
-directories/files if nvram feature used during startup before main()
-entry point.  All changes made in this filesystem will lost at nexe
-exit.
+directories/files if the nvram feature is used during startup before main()
+entry point. All changes made in this filesystem will be lost at nexe exit.
+
 2.2 Channels mount filesystem - it is wrapper around zerovm channels,
 and mounted into "/dev" folder. It has static structure based on
 channels aliases list, and interpret channels as devices. All channels
@@ -28,9 +29,11 @@ aliases listed in zerovm manifest file should be started with /dev/
 alias, that represents their belonging to /dev/ mount. Channels whose
 aliases not started with /dev/ will not be accessible by channels
 filesystem. Functions like stat, readdir are supported also;
+
 2.2.1 Channels representation by stat function. Sequential access
 channels are represented as character devices; Random access channels
 are represented as block devices;
+
 2.2.2 Channels I/O. For channels described in manifest - input/output
 operations are available, and folowing allowed :
 Channel type SGetSPut=0, sequential  get / sequential_put
@@ -38,7 +41,7 @@ RDONLY     Seek pos —     get
 WRONLY     Seek pos —     get
 RDWR       Seek pos —     get
 Channel type RGetSPut=1, Random get / sequential put
-RDONLY     Seek pos — set get 
+RDONLY     Seek pos — set get
 WRONLY     Seek pos —     get
 RDWR       Write pos unavailable; Read Seek pos - set get;
 Channel type SGetRPut=2, Sequential get / Random put
@@ -49,12 +52,14 @@ Channel type RGetRPut=3, Random get / Random put
 RDONLY     Seek pos — set get
 WRONLY     Seek pos —     get
 RDWR       Seek pos — set get
+
 2.2.3 Debugging channel. ZRT has its own debugging channel associated
 with alias name "/dev/debug". If this channel is defined then all
 debugging ZRT information will go into the debug channel If debug
 channel is not defined no debug info will available (apart from system
 logs). Debugging level are regulated by VERBOSITY environment
 variables and supports 1,2,3 values.
+
 2.2.3 Nvram channel, it's a config file for tuning zvm session, has
 alias "/dev/nvram". Config syntax is allowing comments starting with
 "#", and sections names that are expected in square brackets. Single
@@ -62,14 +67,15 @@ pair of key and value must be on single line and it's value should not
 contain carriage return. Escaping rules available if need to provide
 unsupported chars as value.
 List of supported nvram sections:
+
 2.2.3.1. Section [fstab]: Intended to import of TAR archive contents
 leaving directory structure, into ReadWrite FS in memory for ReadOnly
 mounts. And to export of Filesystem contents into tar archive at the
-end of session in 'exit' syscall handler. 
+end of session in 'exit' syscall handler.
 Keywords are valid for fstab:
 - channel : zerovm channel alias, provided in manifest file
-- mountpoint : path in zrt filesystem, any directory path except '/dev/' 
-- access : ro / wo. 
+- mountpoint : path in zrt filesystem, any directory path except '/dev/'
+- access : ro / wo.
   'ro' value if you need to inject files into zrt;
   'rw' value for saving contents of zrt filesystem into tar archive,
   uses of '/' root does not support for 'wo' access value;
@@ -79,11 +85,13 @@ Keywords are valid for fstab:
   old files will stay untouchable, new files/dirs will added and
   existing files will be overwrited. This is also related to
   [precache] section. if removable=no mount will occured only once.
+
 2.2.3.2. Section [env]: Add environment vars into main(), keywords
 are:
 - name : variable name
 - value : variable value
 Escaping of value are supported, rules the same as for args section.
+
 2.2.3.3. Section [args]: Setup command line arguments - 1st argument
 is application name famous as argv0, the rest of contents is
 arguments. argument has several words but inside of double quotes
@@ -92,26 +100,31 @@ interpreting as single argument. It's necessary to escape chars: ','
 appropriate hex value. But any another char can be escaped, using same
 rule.
 - args : command line, specifying also program name as first arg.
+
 2.2.3.4. Section [mapping] : Can be used to set zerovm channels mode,
 if need to override default values: for sequential channels default
 mode is 'pipe', for devices with random access mode is block device.
 args are:
 - channel : zerovm channel whose mode need to be overrided
 - mode : pipe / char /file ;
+
 2.2.3.5. Section [time] : Use to set time, arg:
 - seconds : Amount of seconds since 1970, to get value in linux
   terminal use command: date +"%s"
+
 2.2.3.6. Section [debug] : Use to set verbosity level, for log file
 /dev/debug. To enable logging this channel must exist in zerovm
 manifest file. Arg is:
 - verbosity : decimal value 0,1,2,3 or 4 for maximum logging level.
+
 2.2.3.7. Section [precache] : Instructs ZRT that we need to call
 zfork() before main, just after all nvram sections were processed /
 all tar archives injected into Filesystem;
 - precache : yes / no value; If yes - then zfork will called, if no
   (default) - nothing happens;
+
 2.2.3.8. Example:
-[fstab] 
+[fstab]
 #inject archive contents into zrt fs
 channel=/dev/mount/import.tar, mountpoint=/, access=ro, removable=no
 channel=/dev/mount/scripts.tar, mountpoint=/, access=ro, removable=yes
