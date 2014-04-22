@@ -1,0 +1,21 @@
+Source: libzrt
+Maintainer: Lars Butler <Lars.Butler@gmail.com>
+Section: libs
+Priority: extra
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Homepage: http://zerovm.org
+
+Package: libzrt
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: ZeroVM Runtime
+ ZRT emulates a POSIX-like environment for ZeroVM by replacing parts of
+ the C standard library. ZRT provides an in-memory filesystem for
+ ZeroVM instances, as well as custom date/time functions to ensure
+ determinism.
+
+Package: libzrt-dev
+Architecture: amd64
+Description: ZeroVM Runtime development headers
+ Includes zrt.h.
